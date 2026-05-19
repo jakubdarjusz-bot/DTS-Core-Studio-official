@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DTS Core Studio - Game & Mod Hub</title>
+    <style>
+        /* --- Zmienne dla motywów (Wsparcie dla starszych i nowych przeglądarek) --- */
+        :root {
+            --bg-color: #121212;
+            --text-color: #ffffff;
+            --card-bg: #1e1e1e;
+            --accent-color: #00adb5;
+            --accent-hover: #00f5ff;
+            --border-color: #333333;
+        }
+
+        [data-theme="light"] {
+            --bg-color: #f4f6f9;
+            --text-color: #222831;
+            --card-bg: #ffffff;
+            --accent-color: #007bc4;
+            --accent-hover: #00568a;
+            --border-color: #dddddd;
+        }
+
+        /* --- Style Ogólne --- */
+        * {
+            -webkit-box-sizing: border-box;
+            -moz-box-sizing: border-box;
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-transition: background-color 0.3s, color 0.3s;
+            -moz-transition: background-color 0.3s, color 0.3s;
+            -o-transition: background-color 0.3s, color 0.3s;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        body {
+            background-color: #121212; /* Kolor awaryjny dla bardzo starych przeglądarek */
+            background-color: var(--bg-color);
+            color: #ffffff;
+            color: var(--text-color);
+        }
+
+        header {
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 15px 5%;
+            display: -webkit-box;
+            display: -ms-flexbox;
+            display: flex;
+            -webkit-box-pack: justify;
+            -ms-flex-pack: justify;
+            justify-content: space-between;
+            -webkit-box-align: center;
+            -ms-flex-align: center;
+            align-items: center;
+            position: -webkit-sticky;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--accent-color);
+        }
+
+        .nav-controls {
+            display: -webkit-box;
+            display: -ms-flexbox;
+            display: flex;
+            -webkit-box-align: center;
+            -ms-flex-align: center;
+            align-items: center;
+            gap: 15px;
+        }
+
+        button {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        button:hover {
+            background-color: var(--accent-hover);
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            border: 1px solid var(--accent-color);
+            color: var(--accent-color);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        /* --- Sekcja Launchera --- */
+        .launcher-banner {
+            background: #00adb5;
+            background: -webkit-linear-gradient(135deg, #00adb5 0%, #393e46 100%);
+            background: -o-linear-gradient(135deg, #00adb5 0%, #393e46 100%);
+            background: linear-gradient(135deg, #00adb5 0%, #393e46 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 40px;
+            display: -webkit-box;
+            display: -ms-flexbox;
+            display: flex;
+            -webkit-box-pack: justify;
+            -ms-flex-pack: justify;
+            justify-content: space-between;
+            -webkit-box-align: center;
+            -ms-flex-align: center;
+            align-items: center;
+            -ms-flex-wrap: wrap;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        /* --- Filtry i Kategorie --- */
+        .category-filter {
+            display: -webkit-box;
+            display: -ms-flexbox;
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .filter-btn {
+            background-color: var(--card-bg);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+        }
+
+        .filter-btn.active {
+            background-color: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+        }
+
+        /* --- Siatka z Grami i Modami --- */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+            display: -webkit-box;
+            display: -ms-flexbox;
+            display: flex;
+            -webkit-box-orient: vertical;
+            -webkit-box-direction: normal;
+            -ms-flex-direction: column;
+            flex-direction: column;
+        }
+
+        .card-img {
+            width: 100%;
+            height: 160px;
+            background-color: #333;
+            display: -webkit-box;
+            display: -ms-flexbox;
+            display: flex;
+            -webkit-box-align: center;
+            -ms-flex-align: center;
+            align-items: center;
+            -webkit-box-pack: center;
+            -ms-flex-pack: center;
+            justify-content: center;
+            color: #777;
+            font-weight: bold;
+        }
+
+        .card-content {
+            padding: 20px;
+            -webkit-box-flex: 1;
+            -ms-flex-positive: 1;
+            flex-grow: 1;
+            display: -webkit-box;
+            display: -ms-flexbox;
+            display: flex;
+            -webkit-box-orient: vertical;
+            -webkit-box-direction: normal;
+            -ms-flex-direction: column;
+            flex-direction: column;
+            -webkit-box-pack: justify;
+            -ms-flex-pack: justify;
+            justify-content: space-between;
+        }
+
+        .card-tag {
+            display: inline-block;
+            font-size: 11px;
+            text-transform: uppercase;
+            background-color: var(--border-color);
+            padding: 3px 8px;
+            border-radius: 3px;
+            margin-bottom: 10px;
+            width: -webkit-fit-content;
+            width: -moz-fit-content;
+            width: fit-content;
+        }
+
+        .card-title {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+
+        .card-desc {
+            font-size: 14px;
+            color: #a0a0a0;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+
+        [data-theme="light"] .card-desc {
+            color: #555555;
+        }
+
+        /* --- Okna Modalne --- */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            -webkit-box-pack: center;
+            -ms-flex-pack: center;
+            justify-content: center;
+            -webkit-box-align: center;
+            -ms-flex-align: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background-color: var(--card-bg);
+            padding: 30px;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 450px;
+            border: 1px solid var(--border-color);
+            position: relative;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px; right: 15px;
+            cursor: pointer;
+            font-size: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            border-radius: 5px;
+        }
+
+        .creator-panel {
+            display: none;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body data-theme="dark">
+
+    <header>
+        <div>
+            <div class="logo">DTS Core Studio</div>
+        </div>
+        <div class="nav-controls">
+            <button class="btn-secondary" id="themeToggle">🌓 Tryb</button>
+            <button class="btn-secondary" id="uploadNavBtn" style="display: none;" onclick="toggleCreatorPanel()">➕ Dodaj plik</button>
+            <span id="userDisplay" style="font-weight: bold; display: none;"></span>
+            <button id="loginNavBtn" onclick="openModal('authModal')">Zaloguj / Rejestracja</button>
+            <button id="logoutNavBtn" style="display: none;" onclick="logout()">Wyloguj</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="launcher-banner">
+            <div>
+                <h2>Pobierz DTS Core Launcher</h2>
+                <p>Zarządzaj swoimi modami i uruchamiaj gry bezpośrednio z pulpitu.</p>
+            </div>
+            <button onclick="alert('Pobieranie Launchera...')" style="background-color: #222831; padding: 12px 24px;">Pobierz Launcher</button>
+        </div>
+
+        <div class="creator-panel" id="creatorPanel">
+            <h3 style="margin-bottom: 15px;">Opublikuj nową zawartość</h3>
+            <form id="uploadForm">
+                <div class="form-group">
+                    <label>Nazwa gry / moda</label>
+                    <input type="text" id="prodTitle" required>
+                </div>
+                <div class="form-group">
+                    <label>Typ zawartości</label>
+                    <select id="prodType">
+                        <option value="gra">Gra</option>
+                        <option value="mod">Mod</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Opis</label>
+                    <textarea id="prodDesc" rows="3" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Plik (Link do pliku)</label>
+                    <input type="text" id="prodLink" placeholder="np. https://github.com/.../gra.zip" required>
+                </div>
+                <button type="submit">Opublikuj na stronie</button>
+            </form>
+        </div>
+
+        <div class="category-filter">
+            <button class="filter-btn active" onclick="filterCategory('all', this)">Wszystko</button>
+            <button class="filter-btn" onclick="filterCategory('gra', this)">Gry</button>
+            <button class="filter-btn" onclick="filterCategory('mod', this)">Mody do gier</button>
+        </div>
+
+        <div class="grid" id="contentGrid"></div>
+    </div>
+
+    <div class="modal" id="authModal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal('authModal')">&times;</span>
+            <h3 style="margin-bottom: 20px;">Stwórz konto lub Zaloguj się</h3>
+            <form id="authForm">
+                <div class="form-group">
+                    <label>Nazwa użytkownika</label>
+                    <input type="text" id="authUser" required>
+                </div>
+                <div class="form-group">
+                    <label>Hasło</label>
+                    <input type="password" id="authPass" required>
+                </div>
+                <button type="submit" style="width: 100%; margin-top: 10px;">Potwierdź</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Uniwersalna obsługa bazy danych (bezpieczna dla starszych silników JS)
+        var database = [];
+        try {
+            database = JSON.parse(localStorage.getItem('dts_database'));
+        } catch(e) { }
+        
+        if (!database || database.length === 0) {
+            database = [
+                { id: 1, type: 'gra', title: 'Symulator Windy 2D', desc: 'Realistyczny symulator windy z panelami kodowymi i zaawansowaną fizyką.', link: '#' },
+                { id: 2, type: 'mod', title: 'Większy Silnik do Ciągnika', desc: 'Modyfikacja dodająca tuning mechaniczny i dodatkowe konie mechaniczne.', link: '#' }
+            ];
+        }
+
+        var currentUser = localStorage.getItem('dts_user') || null;
+
+        window.onload = function() {
+            renderContent('all');
+            checkUserSession();
+
+            var themeToggle = document.getElementById('themeToggle');
+            themeToggle.onclick = function() {
+                var currentTheme = document.body.getAttribute('data-theme');
+                var newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                document.body.setAttribute('data-theme', newTheme);
+            };
+        };
+
+        function renderContent(filter) {
+            var grid = document.getElementById('contentGrid');
+            if(!grid) return;
+            grid.innerHTML = '';
+
+            for (var i = 0; i < database.length; i++) {
+                var item = database[i];
+                if (filter !== 'all' && item.type !== filter) continue;
+
+                var card = document.createElement('div');
+                card.className = 'card';
+                
+                var tagText = item.type === 'gra' ? '🎮 Gra' : '🔧 Mod';
+                
+                card.innerHTML = '<div class="card-img">' + item.title.substring(0, 2).toUpperCase() + '</div>' +
+                    '<div class="card-content">' +
+                        '<div>' +
+                            '<span class="card-tag">' + tagText + '</span>' +
+                            '<h4 class="card-title">' + item.title + '</h4>' +
+                            '<p class="card-desc">' + item.desc + '</p>' +
+                        '</div>' +
+                        '<button onclick="alert(\'Pobieranie pliku...\')" style="width: 100%;">Pobierz plik</button>' +
+                    '</div>';
+                grid.appendChild(card);
+            }
+        }
+
+        function filterCategory(category, button) {
+            var buttons = document.querySelectorAll('.filter-btn');
+            for(var i=0; i<buttons.length; i++) {
+                buttons[i].classList.remove('active');
+            }
+            button.classList.add('active');
+            renderContent(category);
+        }
+
+        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        
+        function toggleCreatorPanel() {
+            var panel = document.getElementById('creatorPanel');
+            panel.style.display = (panel.style.display === 'block') ? 'none' : 'block';
+        }
+
+        document.getElementById('authForm').onsubmit = function(e) {
+            if(e.preventDefault) e.preventDefault();
+            var user = document.getElementById('authUser').value.trim();
+            if(user) {
+                currentUser = user;
+                localStorage.setItem('dts_user', user);
+                checkUserSession();
+                closeModal('authModal');
+            }
+            return false;
+        };
+
+        function checkUserSession() {
+            if (currentUser) {
+                document.getElementById('loginNavBtn').style.display = 'none';
+                document.getElementById('logoutNavBtn').style.display = 'block';
+                document.getElementById('uploadNavBtn').style.display = 'block';
+                document.getElementById('userDisplay').style.display = 'block';
+                document.getElementById('userDisplay').innerText = 'Profil: ' + currentUser;
+            } else {
+                document.getElementById('loginNavBtn').style.display = 'block';
+                document.getElementById('logoutNavBtn').style.display = 'none';
+                document.getElementById('uploadNavBtn').style.display = 'none';
+                document.getElementById('userDisplay').style.display = 'none';
+                document.getElementById('creatorPanel').style.display = 'none';
+            }
+        }
+
+        function logout() {
+            currentUser = null;
+            localStorage.removeItem('dts_user');
+            checkUserSession();
+        }
+
+        document.getElementById('uploadForm').onsubmit = function(e) {
+            if(e.preventDefault) e.preventDefault();
+            
+            var newProduct = {
+                id: new Date().getTime(),
+                title: document.getElementById('prodTitle').value,
+                type: document.getElementById('prodType').value,
+                desc: document.getElementById('prodDesc').value,
+                link: document.getElementById('prodLink').value
+            };
+
+            database.unshift(newProduct);
+            try {
+                localStorage.setItem('dts_database', JSON.stringify(database));
+            } catch(err) { }
+            
+            renderContent('all');
+            document.getElementById('uploadForm').reset();
+            toggleCreatorPanel();
+            alert('Dodano do bazy danych DTS!');
+            return false;
+        };
+    </script>
+</body>
+</html>
