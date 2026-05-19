@@ -1,21 +1,111 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DTS Core Studio - Game & Mod Hub</title>
-    <style>
-    /* [WSZYSTKIE TWOJE STYLE - całość z oryginału] */
-    /* ... skopiuj wszystkie style ... */
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>DTS Core Studio - Game & Mod Hub</title>
+  <style>
+    body { margin:0; font-family:sans-serif; background:#121212; color:#fff; }
+    .logo { font-size:24px; color:#00adb5; font-weight:bold }
+    .container { max-width:900px; margin:30px auto; padding:0 20px }
+    .nav-controls { display:flex; gap:10px; align-items:center }
+    button { background:#00adb5; color:#fff; border:0; border-radius:4px; padding:7px 16px; cursor:pointer; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(260px,1fr)); gap:18px }
+    .card {background:#1e1e1e; padding:18px 15px 12px 15px; border-radius:7px; min-height:165px;display:flex;flex-direction:column;justify-content:space-between;}
+    .card-title {font-size:18px;font-weight:600;}
+    .card-desc {font-size:13px;color:#aaa;padding:8px 0;}
+  </style>
 </head>
-<body data-theme="dark">
+<body>
+  <header style="display:flex;justify-content:space-between;align-items:center;padding:16px;">
+    <div class="logo">DTS Core Studio</div>
+    <div class="nav-controls">
+      <button id="themeToggle">🌓</button>
+      <span id="userDisplay" style="display:none;font-weight:bold;"></span>
+      <button id="loginNavBtn" onclick="openModal()">Zaloguj</button>
+      <button id="logoutNavBtn" onclick="logout()" style="display:none">Wyloguj</button>
+      <button id="uploadNavBtn" onclick="toggleForm()" style="display:none">Dodaj</button>
+    </div>
+  </header>
+  <div class="container">
+    <div style="margin-bottom:25px">
+      <button onclick="filter('all')" class="filter-btn">Wszystko</button>
+      <button onclick="filter('gra')" class="filter-btn">Gry</button>
+      <button onclick="filter('mod')" class="filter-btn">Mody</button>
+    </div>
+    <form id="uploadForm" style="display:none;margin-bottom:22px">
+      <input id="prodTitle" placeholder="Nazwa" required>
+      <select id="prodType"><option value="gra">Gra</option><option value="mod">Mod</option></select>
+      <input id="prodDesc" placeholder="Opis" required>
+      <input id="prodLink" placeholder="Link do pliku" required>
+      <button type="submit">Dodaj</button>
+    </form>
+    <div class="grid" id="contentGrid"></div>
+  </div>
+  <div id="modal" style="display:none; position:fixed;top:0;left:0;right:0;bottom:0;align-items:center;justify-content:center;background:rgba(0,0,0,.75);z-index:10">
+    <div style="background:#333;padding:25px 24px;border-radius:7px;max-width:300px">
+      <input id="authUser" placeholder="Nazwa użytkownika" style="width:100%;margin-bottom:8px">
+      <input id="authPass" type="password" placeholder="Hasło" style="width:100%;">
+      <button onclick="auth()" style="width:100%;margin-top:15px;">Wejdź</button>
+    </div>
+  </div>
+  <script>
+    let db = JSON.parse(localStorage.getItem('dts_database'))||[
+      {id:1,type:'gra',title:'Symulator Windy 2D',desc:'Realistyczny symulator windy.',link:'#'},
+      {id:2,type:'mod',title:'Większy Silnik',desc:'Modyfikacja do traktorów.',link:'#'},
+      {id:3,type:'gra',title:'Space Sandbox',desc:'Buduj statki, testuj wytrzymałość.',link:'#'}
+    ], user = localStorage.getItem('dts_user')||null, filterType='all';
 
-    <!-- HEADER -->
-    <!-- ... CAŁA ZAWARTOŚĆ HTML ... -->
-
-    <script>
-    // ... CAŁY TWÓJ KOD JAVASCRIPT Z ORYGINAŁU ...
-    </script>
+    function render() {
+      let grid=document.getElementById('contentGrid');
+      grid.innerHTML='';
+      (filterType==='all'?db:db.filter(i=>i.type===filterType)).forEach(i=>{
+        let c=document.createElement('div');c.className='card';
+        c.innerHTML=`<div><div class="card-title">${i.title}</div><div class="card-desc">${i.desc}</div></div>
+        <button onclick="alert('Pobieranie z: ${i.link}')">Pobierz</button>`;
+        grid.appendChild(c);
+      });
+      document.getElementById('uploadForm').style.display=(user?'block':'none');
+    }
+    function filter(t) { filterType=t; render(); }
+    function openModal() {document.getElementById('modal').style.display='flex';}
+    function auth() {
+      user=document.getElementById('authUser').value.trim();
+      if(user){localStorage.setItem('dts_user',user);document.getElementById('modal').style.display='none';updateUI();}
+    }
+    function logout(){user=null;localStorage.removeItem('dts_user');updateUI();}
+    function toggleForm(){
+      let f=document.getElementById('uploadForm');
+      f.style.display=f.style.display==='block'?'none':'block';
+    }
+    document.getElementById('uploadForm').onsubmit=function(e){
+      e.preventDefault();
+      db.unshift({
+        id:Date.now(),
+        title:prodTitle.value,
+        type:prodType.value,
+        desc:prodDesc.value,
+        link:prodLink.value
+      });
+      localStorage.setItem('dts_database',JSON.stringify(db));
+      render();
+      this.reset();
+      toggleForm();
+      alert('Dodano!');
+    };
+    function updateUI() {
+      document.getElementById('loginNavBtn').style.display=user?'none':'inline-block';
+      document.getElementById('logoutNavBtn').style.display=user?'inline-block':'none';
+      document.getElementById('uploadNavBtn').style.display=user?'inline-block':'none';
+      document.getElementById('userDisplay').style.display=user?'inline-block':'none';
+      document.getElementById('userDisplay').innerText=user?`Profil: ${user}`:'';
+      render();
+    }
+    document.getElementById('themeToggle').onclick = function() {
+      document.body.style.background=document.body.style.background==='#121212'?'#f4f6f9':'#121212';
+      document.body.style.color=document.body.style.color==='#fff'?'#222831':'#fff';
+    }
+    updateUI();
+  </script>
 </body>
 </html>
