@@ -1,0 +1,231 @@
+// --- ZABEZPIECZONY KOD PIN ---
+// "MTIzNA==" to zakodowany w Base64 PIN "1234"
+const ENCRYPTED_PIN = "MTIzNA=="; 
+
+// Blokada prawego przycisku myszy i klawiszy deweloperskich (F12)
+document.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('keydown', (e) => {
+    if (e.key === "F12" || (e.ctrlKey && e.shiftKey && (e.key === "I" || e.key === "J")) || (e.ctrlKey && e.key === "U")) {
+        e.preventDefault();
+    }
+});
+
+// --- BAZA DANYCH (Gry, Mody i Użytkownicy) ---
+let database = JSON.parse(localStorage.getItem('dts_database')) || [
+    { id: 1, type: 'gra', title: 'Symulator Windy 2D', desc: 'Realistyczny symulator windy z panelami kodowymi i zaawansowaną fizyką lin.', link: '#' },
+    { id: 2, type: 'mod', title: 'Większy Silnik do Ciągnika', desc: 'Modyfikacja dodająca tuning mechaniczny i dodatkowe konie mechaniczne do traktorów.', link: '#' }
+];
+
+// Pobieranie zarejestrowanych użytkowników lub stworzenie konta admina na start
+let registeredUsers = JSON.parse(localStorage.getItem('dts_users')) || [
+    { username: "admin", password: "123" } // Domyślne konto, które już istnieje
+];
+
+let currentUser = localStorage.getItem('dts_user') || null;
+let isEditorUnlocked = false;
+
+// Inicjalizacja strony
+document.addEventListener('DOMContentLoaded', () => {
+    renderContent();
+    checkUserSession();
+    setupAuthForms(); // Uruchomienie obsługi logowania i rejestracji
+
+    const themeToggle = document.getElementById('themeToggle');
+    themeToggle.addEventListener('click', () => {
+        const currentTheme = document.body.getAttribute('data-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        document.body.setAttribute('data-theme', newTheme);
+    });
+});
+
+// Wyświetlanie gier i modów
+function renderContent(filter = 'all') {
+    const grid = document.getElementById('contentGrid');
+    grid.innerHTML = '';
+    const filteredData = filter === 'all' ? database : database.filter(item => item.type === filter);
+
+    filteredData.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+            <div class="card-img">${item.title.substring(0, 2).toUpperCase()}</div>
+            <div class="card-content">
+                <div>
+                    <span class="card-tag">${item.type === 'gra' ? '🎮 Gra' : '🔧 Mod'}</span>
+                    <h4 class="card-title">${item.title}</h4>
+                    <p class="card-desc">${item.desc}</p>
+                </div>
+                <button onclick="alert('Pobieranie pliku z: ${item.link}')" style="width: 100%;">Pobierz plik</button>
+            </div>
+        `;
+        grid.appendChild(card);
+    });
+}
+
+// Filtrowanie kategorii
+window.filterCategory = function(category, button) {
+    document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+    button.classList.add('active');
+    renderContent(category);
+}
+
+// Zarządzanie oknami modalnymi
+window.openModal = function(id) { document.getElementById(id).style.display = 'flex'; }
+window.closeModal = function(id) { document.getElementById(id).style.display = 'none'; }
+
+window.openPinModal = function() {
+    if (isEditorUnlocked) { toggleCreatorPanel(); } else { openModal('pinModal'); }
+}
+
+// Weryfikacja PINu edytora
+document.getElementById('pinForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const enteredPin = document.getElementById('editorPin').value;
+    if (btoa(enteredPin) === ENCRYPTED_PIN) {
+        isEditorUnlocked = true;
+        closeModal('pinModal');
+        toggleCreatorPanel();
+        document.getElementById('editorPin').value = '';
+    } else {
+        alert('⚠️ Nieprawidłowy kod PIN Edytora!');
+        document.getElementById('editorPin').value = '';
+    }
+});
+
+function toggleCreatorPanel() {
+    const panel = document.getElementById('creatorPanel');
+    panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+}
+
+// --- SYSTEM REJESTRACJI I LOGOWANIA ---
+function setupAuthForms() {
+    const authModalContent = document.querySelector('#authModal .modal-content');
+    
+    // Dynamicznie zmieniamy zawartość okna na Logowanie lub Rejestrację
+    window.showRegisterForm = function() {
+        authModalContent.innerHTML = `
+            <span class="close-btn" onclick="closeModal('authModal')">&times;</span>
+            <h3 style="margin-bottom: 20px; color: var(--accent-color);">Stwórz nowe konto</h3>
+            <form id="registerForm">
+                <div class="form-group">
+                    <label>Login / Nazwa użytkownika</label>
+                    <input type="text" id="regUser" required>
+                </div>
+                <div class="form-group">
+                    <label>Hasło</label>
+                    <input type="password" id="regPass" required>
+                </div>
+                <button type="submit" style="width: 100%; margin-top: 10px;">Zarejestruj się</button>
+            </form>
+            <p style="font-size: 13px; text-align: center; margin-top: 15px;">
+                Masz już konto? <a href="#" onclick="setupAuthForms()" style="color: var(--accent-color);">Zaloguj się</a>
+            </p>
+        `;
+        
+        // Obsługa wysłania formularza rejestracji
+        document.getElementById('registerForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const user = document.getElementById('regUser').value.trim();
+            const pass = document.getElementById('regPass').value;
+
+            // Sprawdzenie, czy użytkownik już istnieje
+            const userExists = registeredUsers.some(u => u.username.toLowerCase() === user.toLowerCase());
+            if (userExists) {
+                alert('⚠️ Taki użytkownik już istnieje! Wybierz inną nazwę.');
+                return;
+            }
+
+            // Dodanie nowego użytkownika do bazy
+            registeredUsers.push({ username: user, password: pass });
+            localStorage.setItem('dts_users', JSON.stringify(registeredUsers));
+            
+            alert('🎉 Konto utworzone pomyślnie! Teraz możesz się zalogować.');
+            setupAuthForms(); // Powrót do ekranu logowania
+        });
+    };
+
+    // Domyślny widok: Logowanie
+    authModalContent.innerHTML = `
+        <span class="close-btn" onclick="closeModal('authModal')">&times;</span>
+        <h3 style="margin-bottom: 20px;">Zaloguj się do DTS Core</h3>
+        <form id="loginForm">
+            <div class="form-group">
+                <label>Nazwa użytkownika</label>
+                <input type="text" id="loginUser" required>
+            </div>
+            <div class="form-group">
+                <label>Hasło</label>
+                <input type="password" id="loginPass" required>
+            </div>
+            <button type="submit" style="width: 100%; margin-top: 10px;">Zaloguj się</button>
+        </form>
+        <p style="font-size: 13px; text-align: center; margin-top: 15px;">
+            Nie masz konta? <a href="#" onclick="showRegisterForm()" style="color: var(--accent-color);">Zarejestruj się tutaj</a>
+        </p>
+    `;
+
+    // Obsługa wysłania formularza logowania
+    document.getElementById('loginForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const user = document.getElementById('loginUser').value.trim();
+        const pass = document.getElementById('loginPass').value;
+
+        // Szukanie użytkownika w bazie i sprawdzanie hasła
+        const foundUser = registeredUsers.find(u => u.username.toLowerCase() === user.toLowerCase() && u.password === pass);
+
+        if (foundUser) {
+            currentUser = foundUser.username;
+            localStorage.setItem('dts_user', currentUser);
+            checkUserSession();
+            closeModal('authModal');
+            alert(`Witaj ponownie, ${currentUser}!`);
+        } else {
+            alert('⚠️ Błędny login lub hasło!');
+        }
+    });
+}
+
+function checkUserSession() {
+    if (currentUser) {
+        document.getElementById('loginNavBtn').style.display = 'none';
+        document.getElementById('logoutNavBtn').style.display = 'block';
+        document.getElementById('uploadNavBtn').style.display = 'block';
+        document.getElementById('userDisplay').style.display = 'block';
+        document.getElementById('userDisplay').innerText = `Profil: ${currentUser}`;
+    } else {
+        document.getElementById('loginNavBtn').style.display = 'block';
+        document.getElementById('logoutNavBtn').style.display = 'none';
+        document.getElementById('uploadNavBtn').style.display = 'none';
+        document.getElementById('userDisplay').style.display = 'none';
+        document.getElementById('creatorPanel').style.display = 'none';
+        isEditorUnlocked = false;
+    }
+}
+
+window.logout = function() {
+    currentUser = null;
+    isEditorUnlocked = false;
+    localStorage.removeItem('dts_user');
+    checkUserSession();
+}
+
+// Publikowanie nowej zawartości
+document.getElementById('uploadForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (!isEditorUnlocked) return;
+
+    const newProduct = {
+        id: Date.now(),
+        title: document.getElementById('prodTitle').value,
+        type: document.getElementById('prodType').value,
+        desc: document.getElementById('prodDesc').value,
+        link: document.getElementById('prodLink').value
+    };
+
+    database.unshift(newProduct);
+    localStorage.setItem('dts_database', JSON.stringify(database));
+    renderContent();
+    document.getElementById('uploadForm').reset();
+    toggleCreatorPanel();
+    alert('Pomyślnie dodano obiekt do bazy danych DTS!');
+});
