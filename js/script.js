@@ -1,0 +1,158 @@
+// --- ZABEZPIECZONY KOD PIN ---
+// Kod PIN nie jest już zapisany jako zwykły tekst (np. "1234"). 
+// Zamiast tego został zakodowany w formacie Base64.
+// "MTIzNA==" to zakodowany PIN "1234".
+const ENCRYPTED_PIN = "MTIzNA=="; 
+
+// Blokada prawego przycisku myszy (żeby nikt nie kliknął "Zbadaj")
+document.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    alert('⚠️ Opcje programistyczne są zablokowane dla tego projektu!');
+});
+
+// Blokada klawiszy F12, Ctrl+Shift+I, Ctrl+Shift+J (skróty do podejrzenia kodu)
+document.addEventListener('keydown', (e) => {
+    if (
+        e.key === "F12" || 
+        (e.ctrlKey && e.shiftKey && e.key === "I") || 
+        (e.ctrlKey && e.shiftKey && e.key === "J") || 
+        (e.ctrlKey && e.key === "U")
+    ) {
+        e.preventDefault();
+        alert('⚠️ Dostęp do kodu źródłowego został zablokowany przez DTS Core Studio.');
+    }
+});
+
+// Baza danych w LocalStorage
+let database = JSON.parse(localStorage.getItem('dts_database')) || [
+    { id: 1, type: 'gra', title: 'Symulator Windy 2D', desc: 'Realistyczny symulator windy z panelami kodowymi i zaawansowaną fizyką lin.', link: '#' },
+    { id: 2, type: 'mod', title: 'Większy Silnik do Ciągnika', desc: 'Modyfikacja dodająca tuning mechaniczny i dodatkowe konie mechaniczne do traktorów.', link: '#' },
+    { id: 3, type: 'gra', title: 'Space Sandbox', desc: 'Buduj własne statki i testuj ich wytrzymałość w próżni kosmicznej.', link: '#' }
+];
+
+let currentUser = localStorage.getItem('dts_user') || null;
+let isEditorUnlocked = false;
+
+document.addEventListener('DOMContentLoaded', () => {
+    renderContent();
+    checkUserSession();
+
+    const themeToggle = document.getElementById('themeToggle');
+    themeToggle.addEventListener('click', () => {
+        const currentTheme = document.body.getAttribute('data-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        document.body.setAttribute('data-theme', newTheme);
+    });
+});
+
+function renderContent(filter = 'all') {
+    const grid = document.getElementById('contentGrid');
+    grid.innerHTML = '';
+    const filteredData = filter === 'all' ? database : database.filter(item => item.type === filter);
+
+    filteredData.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+            <div class="card-img">${item.title.substring(0, 2).toUpperCase()}</div>
+            <div class="card-content">
+                <div>
+                    <span class="card-tag">${item.type === 'gra' ? '🎮 Gra' : '🔧 Mod'}</span>
+                    <h4 class="card-title">${item.title}</h4>
+                    <p class="card-desc">${item.desc}</p>
+                </div>
+                <button onclick="alert('Pobieranie pliku z: ${item.link}')" style="width: 100%;">Pobierz plik</button>
+            </div>
+        `;
+        grid.appendChild(card);
+    });
+}
+
+function filterCategory(category, button) {
+    document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+    button.classList.add('active');
+    renderContent(category);
+}
+
+function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+window.closeModal = function(id) { document.getElementById(id).style.display = 'none'; }
+
+window.openPinModal = function() {
+    if (isEditorUnlocked) { toggleCreatorPanel(); } else { openModal('pinModal'); }
+}
+
+document.getElementById('pinForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const enteredPin = document.getElementById('editorPin').value;
+    
+    // btoa() zamienia wpisany PIN na Base64 i porównuje z zaszyfrowanym
+    if (btoa(enteredPin) === ENCRYPTED_PIN) {
+        isEditorUnlocked = true;
+        closeModal('pinModal');
+        toggleCreatorPanel();
+        document.getElementById('editorPin').value = '';
+    } else {
+        alert('⚠️ Nieprawidłowy kod PIN! Dostęp zabroniony.');
+        document.getElementById('editorPin').value = '';
+    }
+});
+
+function toggleCreatorPanel() {
+    const panel = document.getElementById('creatorPanel');
+    panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+}
+
+document.getElementById('authForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const user = document.getElementById('authUser').value.trim();
+    if(user) {
+        currentUser = user;
+        localStorage.setItem('dts_user', user);
+        checkUserSession();
+        closeModal('authModal');
+    }
+});
+
+function checkUserSession() {
+    if (currentUser) {
+        document.getElementById('loginNavBtn').style.display = 'none';
+        document.getElementById('logoutNavBtn').style.display = 'block';
+        document.getElementById('uploadNavBtn').style.display = 'block';
+        document.getElementById('userDisplay').style.display = 'block';
+        document.getElementById('userDisplay').innerText = `Profil: ${currentUser}`;
+    } else {
+        document.getElementById('loginNavBtn').style.display = 'block';
+        document.getElementById('logoutNavBtn').style.display = 'none';
+        document.getElementById('uploadNavBtn').style.display = 'none';
+        document.getElementById('userDisplay').style.display = 'none';
+        document.getElementById('creatorPanel').style.display = 'none';
+        isEditorUnlocked = false;
+    }
+}
+
+window.logout = function() {
+    currentUser = null;
+    isEditorUnlocked = false;
+    localStorage.removeItem('dts_user');
+    checkUserSession();
+}
+
+document.getElementById('uploadForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (!isEditorUnlocked) return;
+
+    const newProduct = {
+        id: Date.now(),
+        title: document.getElementById('prodTitle').value,
+        type: document.getElementById('prodType').value,
+        desc: document.getElementById('prodDesc').value,
+        link: document.getElementById('prodLink').value
+    };
+
+    database.unshift(newProduct);
+    localStorage.setItem('dts_database', JSON.stringify(database));
+    renderContent();
+    document.getElementById('uploadForm').reset();
+    toggleCreatorPanel();
+    alert('Pomyślnie dodano obiekt do bazy danych DTS!');
+});
