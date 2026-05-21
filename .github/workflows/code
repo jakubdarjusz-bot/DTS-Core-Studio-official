@@ -1,0 +1,17 @@
+// --- TAJNY KOD KLAWISZOWY (CHEAT CODE) ---
+let pressedKeys = "";
+const SECRET_CODE = "dts"; // Tajne słowo, które musisz wpisać na klawiaturze
+
+document.addEventListener('keydown', (e) => {
+    // Zapisujemy wciśniętą literę (zamienioną na małą)
+    pressedKeys += e.key.toLowerCase();
+    
+    // Trzymamy w pamięci tylko tyle liter, ile ma nasz tajny kod
+    pressedKeys = pressedKeys.slice(-SECRET_CODE.length);
+    
+    // Jeśli wpisany tekst to "dts", odpalamy procedurę weryfikacji
+    if (pressedKeys === SECRET_CODE) {
+        pressedKeys = ""; // Czyścimy pamięć
+        triggerAdminAccess();
+    }
+});
