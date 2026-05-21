@@ -1,0 +1,23 @@
+// Funkcja wywoływana tajnym kodem "dts"
+function triggerAdminAccess() {
+    // 1. Sprawdzamy, czy użytkownik w ogóle zalogował się na konto admina
+    if (!currentUser || currentUser.toLowerCase() !== 'admin') {
+        alert('⚠️ Intruz! Musisz najpierw zalogować się na konto: admin.');
+        return;
+    }
+
+    // 2. Jeśli jest zalogowany jako admin, wyskakuje systemowe okno na PIN
+    const enteredPin = prompt("⚙️ Weryfikacja DTS Core System. Wprowadź kod PIN Administratora:");
+    
+    if (enteredPin === null) return; // Jeśli administrator kliknął "Anuluj"
+
+    // 3. Weryfikacja PIN-u (btoa zamienia wpisany tekst na Base64)
+    if (btoa(enteredPin) === ENCRYPTED_PIN) {
+        isEditorUnlocked = true;
+        alert('🔓 Autoryzacja pomyślna! Panel Administratora został wygenerowany.');
+        toggleCreatorPanel(); // Ta funkcja (którą zrobiliśmy wcześniej) wstrzykuje panel do HTML
+    } else {
+        alert('⚠️ Błędny kod PIN! Odmowa dostępu.');
+        isEditorUnlocked = false;
+    }
+}
