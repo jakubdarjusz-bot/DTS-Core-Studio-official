@@ -1,0 +1,30 @@
+# Polityka Bezpieczeństwa (Security Policy) - DTS Core Studio
+
+W DTS Core Studio traktujemy bezpieczeństwo naszych projektów, gier oraz danych użytkowników bardzo poważnie. Poniżej znajdują się zasady dotyczące zabezpieczeń naszej strony i zgłaszania ewentualnych podatności.
+
+## 🛡️ Architektura Bezpieczeństwa (F12 / Console Information)
+
+Nasza strona działa na hostingu statycznym (GitHub Pages). Zdajemy sobie sprawę z ograniczeń tej platformy, dlatego wdrożyliśmy zaawansowane mechanizmy zabezpieczeń po stronie klienta:
+
+1. **Brak fizycznego Panelu w HTML:** Panel Administratora nie istnieje w pliku źródłowym strony. Jest wstrzykiwany dynamicznie przez silnik JS wyłącznie po pełnej autoryzacji loginu i klucza szyfrującego.
+2. **Ofuskacja Kodu:** Kod źródłowy skryptów jest zaciemniony (obfuscated). Próby odczytania bazy danych, haseł czy algorytmów weryfikacyjnych z poziomu zakładki *Sources* są niemożliwe dla standardowego użytkownika.
+3. **Izolacja LocalStorage:** Zmiany wprowadzane przez użytkowników w konsoli deweloperskiej (F12) wpływają **tylko i wyłącznie** na ich własną przeglądarkę (lokalną kopię). Żadne lokalne modyfikacje kodu nie są przesyłane do głównego repozytorium i nie wpływają na pozostałych graczy.
+
+## 👥 Wspierane Wersje
+
+Błędy bezpieczeństwa i poprawki są wdrażane wyłącznie dla głównej, aktywnej wersji strony:
+
+| Wersja | Wspierana |
+| :--- | :---: |
+| v2.0 (Obecna - Nowy System Logowania) | ❤️ Tak |
+| v1.0 (Stara wersja bez haseł) | ❌ Nie |
+
+## 🐛 Jak zgłosić lukę w zabezpieczeniach?
+
+Jeśli znalazłeś błąd, który pozwala na ominięcie weryfikacji PIN lub błąd w skryptach, który psuje działanie strony u innych:
+
+1. **Nie publikuj błędu publicznie** w sekcji *Issues* na GitHubie, aby inni tego nie wykorzystali.
+2. Napisz prywatną wiadomość do twórcy projektu (DTS) lub zgłoś to bezpośrednio przez nasz oficjalny profil.
+3. Postaramy się naprawić zgłoszony problem w ciągu 48 godzin od weryfikacji.
+
+Dziękujemy za pomoc w utrzymaniu projektów DTS Core Studio bezpiecznymi dla wszystkich graczy!
